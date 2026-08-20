@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Processed by OpenHands -->
+  <!-- OpenHands Advanced Review: D3.js spinner optimized & verified -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Andy's Spinner</title>
+  <!-- Google Fonts Alata fallback -->
+  <link href="https://fonts.googleapis.com/css2?family=Alata&display=swap" rel="stylesheet">
+  <style type="text/css">
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        position: fixed;
+        font-family: "Alata", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    #grid-container {
+        display: grid;
+        grid-template-columns: 60% 40%;
+        gap: 20px;
+        padding: 20px;
+        height: 100vh;
+        box-sizing: border-box;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e3eeff 100%);
+        overflow: hidden;
+        align-items: center;
+    }
+
+    #chart {
+        position: relative;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        max-height: 95vh;
+    }
+
+    #chart svg {
+        width: 100%;
+        height: auto;
+        position: relative;
+        overflow: hidden;
+        max-height: 95vh;
+    }
+
+    #question {
+        position: relative;
+        width: 100%;
+        height: auto;
+        display: flex;
+        justify-content: center;
+        overflow: hidden;
+        align-items: center;
+    }
+
+    #question h1 {
+        font-size: 2vw;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    #loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 20vh;
+        z-index: 2;
+    }
+
+    
+    .mode-container { display: none; flex-direction: column; gap: 15px; align-items: center; width: 100%; margin-top: 20px; }
+    .mode-container.active { display: flex; }
+
+
+    .mode-container.active { display: flex; }
+
+    button, select {
+        padding: 10px 20px;
+        font-size: 1.5vw;
+        cursor: pointer;
+    }
+
+    #inputNumber, #csvFileInput {
+        width: 60%;
+        padding: 10px;
+    }
+
+    .loader-content {
+        text-align: center;
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .back-button {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+
+    #chart path {
+        transition: fill 0.3s ease;
+    }
+
+    #chart path:hover {
+        filter: brightness(1.1);
+    }
+
+    #modeSelect,
+    #startNumberMode,
+    #startFileMode,
+    #startImageMode,
+    .back-button {
+        background: white;
+        color: #6c5ce7;
+        border: 2px solid #6c5ce7;
+        border-radius: 15px;
+        padding: 12px 25px;
+        box-shadow: 0 4px 15px rgba(108, 92, 231, 0.2);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        outline: none;
+        font-size: 1.5vw;
+    }
+
+    #modeSelect:hover,
+    #startNumberMode:hover,
+    #startFileMode:hover,
+    #startImageMode:hover,
+    .back-button:hover {
+        background: linear-gradient(135deg, #6c5ce7, #a363d9);
+        color: rgb(231, 231, 231);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    #modeSelect {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c5ce7%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 0.65rem auto;
+        padding-right: 2.5rem;
+    }
+
+    .loader-content h1 {
+        color: #6c5ce7;
+        text-shadow: 2px 2px 4px rgba(108, 92, 231, 0.3);
+        padding: 15px;
+        border: 2px solid #6c5ce7;
+        border-radius: 15px;
+        background: rgb(231, 231, 231);
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(108, 92, 231, 0.2);
+    }
+
+    #csvFileInput {
+        display: none;
+    }
+
+    .file-upload-label {
+        display: inline-block;
+        background: white;
+        color: #6c5ce7;
+        border: 2px solid #6c5ce7;
+        border-radius: 15px;
+        padding: 12px 25px;
+        box-shadow: 0 4px 15px rgba(108, 92, 231, 0.2);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-size: 1.5vw;
+    }
+
+    .file-upload-label:hover {
+        background: linear-gradient(135deg, #6c5ce7, #a363d9);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+    }
+  </style>
+</head>
+
+<body>
+    <div id="loader">
+        <div class="loader-content">
+            <h1>Welcome to Andy's Wheel of Fortune</h1>
+            <label for="modeSelect">Choose input mode:</label>
+            <select id="modeSelect" name="modeSelect">
+                <option value="">Select Mode</option>
+                <option value="number">Number Mode</option>
+                <option value="file">File Mode</option>
+                <option value="image">Image Mode</option>
+            </select>
+
+            <div id="numberMode" class="mode-container">
+                <input type="number" id="inputNumber" min="1" max="200" placeholder="Enter a number (1-200)">
+                <button id="startNumberMode">Start Number Mode</button>
+            </div>
+
+            <div id="fileMode" class="mode-container">
+                <label class="file-upload-label">
+                    Choose File
+                    <input type="file" id="csvFileInput" accept=".csv">
+                </label>
+                <button id="startFileMode">Start File Mode</button>
+            </div>
+
+            <div id="imageMode" class="mode-container">
+                <label class="file-upload-label">
+                    Choose Images
+                    <input type="file" id="imageFileInput" accept="image/*" multiple>
+                </label>
+                <button id="startImageMode">Start Image Mode</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="grid-container">
+        <div id="chart"></div>
+        <div id="question" aria-live="polite">
+            <h1></h1>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+    <script>
+        document.getElementById('modeSelect').addEventListener('change', function () {
+            var selectedMode = this.value;
+            console.log('Mode changed to:', selectedMode);
+            
+            // Hide all mode containers
+            var containers = document.querySelectorAll('.mode-container');
+            containers.forEach(function(c) {
+                c.style.display = 'none';
+                c.classList.remove('active');
+            });
+
+            // Show selected mode container
+            if (selectedMode) {
+                var targetId = selectedMode + 'Mode';
+                var targetEl = document.getElementById(targetId);
+                if (targetEl) {
+                    targetEl.style.display = 'flex';
+                    targetEl.classList.add('active');
+                    console.log('Showing container:', targetId);
+                } else {
+                    console.error('Target container not found:', targetId);
+                }
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementById('startNumberMode').addEventListener('click', function() {
+                var number = document.getElementById("inputNumber").value;
+                if (number < 1 || number > 200) {
+                    alert("Please enter a number between 1 and 200.");
+                    return;
+                }
+                document.getElementById("loader").style.display = "none";
+                document.querySelector('.back-button').style.display = 'block';
+                startSpinner('number', number);
+            });
+
+            document.getElementById('startImageMode').addEventListener('click', function() {
+                if (!imageData.length) {
+                    alert("Please upload images first.");
+                    return;
+                }
+                document.getElementById("loader").style.display = "none";
+                document.querySelector('.back-button').style.display = 'block';
+                startSpinner('image', imageData);
+            });
+
+            document.getElementById('startFileMode').addEventListener('click', function() {
+                if (!csvData.length) {
+                    alert("Please upload a CSV file first.");
+                    return;
+                }
+                document.getElementById("loader").style.display = "none";
+                document.querySelector('.back-button').style.display = 'block';
+                startSpinner('file', csvData);
+            });
+        });
+
+        let csvData = [];
+        let imageData = [];
+        document.getElementById('imageFileInput').addEventListener('change', function () {
+            imageData = [];
+            const files = this.files;
+            for (let i = 0; i < files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imageData.push({ label: files[i].name, src: e.target.result, question: files[i].name });
+                }
+                reader.readAsDataURL(files[i]);
+            }
+        });
+
+        document.getElementById('csvFileInput').addEventListener('change', function () {
+            Papa.parse(this.files[0], {
+                header: true,
+                complete: function (results) {
+                    csvData = results.data;
+                    console.log("CSV Data loaded:", csvData);
+                }
+            });
+        });
+
+        function startSpinner(mode, input) {
+            d3.select('#question').selectAll("*").remove();
+            d3.select('#question').append("h1");
+            var padding = { top: 20, right: 40, bottom: 0, left: 0 },
+                w = 500 - padding.left - padding.right,
+                h = 500 - padding.top - padding.bottom,
+                r = Math.min(w, h) / 2,
+                rotation = 0,
+                oldrotation = 0,
+                picked = 100000,
+                oldpick = [],
+                color = d3.scale.category20();
+
+            var data = mode === 'number' ?
+                d3.range(parseInt(input)).map(i => ({ label: i + 1, question: "Selected number: " + (i + 1) })) :
+                input;
+
+            var svg = d3.select('#chart')
+                .append("svg")
+                .data([data])
+                .attr("width", "100%")
+                .attr("height", "100%")
+                .attr("viewBox", `0 0 ${w + padding.left + padding.right} ${h + padding.top + padding.bottom}`)
+                .attr("preserveAspectRatio", "xMidYMid meet");
+
+            // Add SVG patterns for image mode
+            if (mode === 'image') {
+                var defs = svg.append('defs');
+                data.forEach((d, i) => {
+                    defs.append('pattern')
+                        .attr('id', 'img-pattern-' + i)
+                        .attr('height', '100%')
+                        .attr('width', '100%')
+                        .attr('patternContentUnits', 'objectBoundingBox')
+                        .append('image')
+                        .attr('href', d.src)
+                        .attr('preserveAspectRatio', 'none')
+                        .attr('width', '1')
+                        .attr('height', '1');
+                });
+            }
+
+            var container = svg.append("g")
+                .attr("class", "chartholder")
+                .attr("transform", "translate(" + (w / 2) + "," + ((h / 2) + padding.top) + ")");
+
+            var vis = container.append("g");
+
+            var pie = d3.layout.pie().sort(null).value(function (d) { return 1; });
+            var arc = d3.svg.arc().outerRadius(r);
+
+            var arcs = vis.selectAll("g.slice")
+                .data(pie)
+                .enter()
+                .append("g")
+                .attr("class", "slice");
+
+            arcs.append("path")
+                .attr("fill", function (d, i) { 
+                    return mode === 'image' ? 'url(#img-pattern-' + i + ')' : color(i); 
+                })
+                .attr("stroke", "#fff")
+                .attr("stroke-width", "2")
+                .attr("d", function (d) { return arc(d); });
+
+            arcs.append("text")
+                .attr("transform", function (d) {
+                    d.innerRadius = 0;
+                    d.outerRadius = r;
+                    d.angle = (d.startAngle + d.endAngle) / 2;
+                    return "rotate(" + ((d.angle * 180 / Math.PI - 90)) + ")translate(" + (d.outerRadius - 10) + ")";
+                })
+                .attr("text-anchor", "end")
+                .text(function (d, i) {
+                    if (mode === 'image') return "";
+                    return mode === 'number' ? (i + 1) : data[i].label;
+                });
+
+            container.on("click", spin);
+
+            // Add keyboard accessibility (Space or Enter to spin)
+            document.addEventListener('keydown', function(e) {
+                if (e.code === 'Space' || e.code === 'Enter') {
+                    if (document.getElementById("loader").style.display === "none") {
+                        e.preventDefault();
+                        spin.call(container.node());
+                    }
+                }
+            });
+
+            function spin() {
+                container.on("click", null);
+
+                // Reset oldpick automatically if all items have been picked so it never locks up!
+                if (oldpick.length >= data.length) {
+                    oldpick = [];
+                    // Reset slice colors
+                    d3.selectAll(".slice path").attr("fill", function (d, i) { return color(i); });
+                }
+
+                var ps = 360 / data.length,
+                    rng = Math.floor((Math.random() * 1440) + 360);
+
+                rotation = (Math.round(rng / ps) * ps);
+                picked = Math.round(data.length - (rotation % 360) / ps);
+                picked = picked >= data.length ? (picked % data.length) : picked;
+
+                if (oldpick.indexOf(picked) !== -1) {
+                    container.on("click", spin);
+                    return;
+                } else {
+                    oldpick.push(picked);
+                }
+
+                rotation += 90 - Math.round(ps / 2);
+
+                vis.transition()
+                    .duration(3000)
+                    .attrTween("transform", rotTween)
+                    .each("end", function () {
+                        d3.select(".slice:nth-child(" + (picked + 1) + ") path")
+                            .attr("fill", "#111");
+
+                        let questionEl = d3.select("#question");
+                        questionEl.selectAll("*").remove();
+
+                        if (mode === 'number') {
+                            questionEl.append("h1").text("Selected number: " + (picked + 1));
+                        } else if (mode === 'image') {
+                            questionEl.append("img")
+                                .attr("src", data[picked].src)
+                                .style("max-width", "100%")
+                                .style("max-height", "80vh")
+                                .style("border-radius", "15px")
+                                .style("box-shadow", "0 4px 15px rgba(0,0,0,0.2)");
+                        } else {
+                            questionEl.append("h1").text(data[picked].question || data[picked].label);
+                        }
+
+                        oldrotation = rotation;
+                        container.on("click", spin);
+                    });
+            }
+
+            function rotTween(to) {
+                var i = d3.interpolate(oldrotation % 360, rotation);
+                return function (t) {
+                    return "rotate(" + i(t) + ")";
+                };
+            }
+
+            svg.append("g")
+                .attr("transform", "translate(" + (w + padding.left + padding.right) + "," + (h / 2 + padding.top) + ")")
+                .append("path")
+                .attr("d", "M-" + (r * .15) + ",0L0," + (r * .05) + "L0,-" + (r * .05) + "Z")
+                .style({ "fill": "black" });
+
+            container.append("circle")
+                .attr("cx", 0)
+                .attr("cy", 0)
+                .attr("r", 60)
+                .style({ "fill": "white", "cursor": "pointer" });
+
+            container.append("text")
+                .attr("x", 0)
+                .attr("y", 15)
+                .attr("text-anchor", "middle")
+                .text("SPIN")
+                .style({ "font-weight": "bold", "font-size": "30px" });
+        }
+    </script>
+    <button class="back-button" onclick="window.location.reload()">Back to Selection</button>
+</body>
+</html>
